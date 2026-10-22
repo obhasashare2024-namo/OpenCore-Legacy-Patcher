@@ -186,22 +186,25 @@ class PatchSysVolume:
         Reverts APFS snapshot and cleans up any changes made to the root and data volume
         """
 
-        if APFSSnapshot(self.constants.detected_os, self.mount_location).revert_snapshot() is False:
-            return
+        try:
+            if APFSSnapshot(self.constants.detected_os, self.mount_location).revert_snapshot() is False:
+                return
 
-        self._clean_skylight_plugins()
-        self._delete_nonmetal_enforcement()
-        self._delete_nonmetal_defaults()
+            self._clean_skylight_plugins()
+            self._delete_nonmetal_enforcement()
+            self._delete_nonmetal_defaults()
 
-        kernelcache.KernelCacheSupport(
-            mount_location_data=self.mount_location_data,
-            detected_os=self.constants.detected_os,
-            skip_root_kmutil_requirement=self.skip_root_kmutil_requirement
-        ).clean_auxiliary_kc()
+            kernelcache.KernelCacheSupport(
+                mount_location_data=self.mount_location_data,
+                detected_os=self.constants.detected_os,
+                skip_root_kmutil_requirement=self.skip_root_kmutil_requirement
+            ).clean_auxiliary_kc()
 
-        self.constants.root_patcher_succeeded = True
-        logging.info("- Unpatching complete")
-        logging.info("\nPlease reboot the machine for patches to take effect")
+            self.constants.root_patcher_succeeded = True
+            logging.info("- Unpatching complete")
+            logging.info("\nPlease reboot the machine for patches to take effect")
+        finally:
+            self._unmount_root_vol()
 
 
     def _rebuild_root_volume(self) -> bool:
